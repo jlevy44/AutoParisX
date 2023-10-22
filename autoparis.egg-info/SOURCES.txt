@@ -13,3 +13,4 @@ autoparis.egg-info/dependency_links.txt
 autoparis.egg-info/entry_points.txt
 autoparis.egg-info/requires.txt
 autoparis.egg-info/top_level.txt
+scripts/install_apx_dependencies.sh

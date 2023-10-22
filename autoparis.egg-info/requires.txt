@@ -12,8 +12,10 @@ sauth==1.1.0
 scikit_learn>=1.2.2
 scipy==1.11.2
 setuptools==68.0.0
-pathpretrain==0.1.1
+pathpretrain==0.1.2
+ninja
+torchvision==0.10.1
 
 [gpu]
 cucim==23.8.0
-cupy==12.2.0
+cupy-cuda11x==12.2.0
