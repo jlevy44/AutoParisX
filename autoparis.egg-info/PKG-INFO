@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: autoparis
+Version: 0.1
+Summary: Python package for Autoparis Workflow. Mirrors jupyter developments.
+Home-page: https://github.com/jlevy44/autoparis_prototype
+Author: Joshua Levy
+Author-email: joshualevy44@berkeley.edu
+License: MIT
+Description-Content-Type: text/markdown
+Provides-Extra: gpu
+License-File: LICENSE
+
+# autoparis_prototype
+ 

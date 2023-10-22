@@ -1,0 +1,15 @@
+LICENSE
+README.md
+setup.py
+autoparis/__init__.py
+autoparis/detectron_predict.py
+autoparis/dzi_writer.py
+autoparis/extract_predict.py
+autoparis/generate_sif_scores.py
+autoparis/refine_detectron.py
+autoparis.egg-info/PKG-INFO
+autoparis.egg-info/SOURCES.txt
+autoparis.egg-info/dependency_links.txt
+autoparis.egg-info/entry_points.txt
+autoparis.egg-info/requires.txt
+autoparis.egg-info/top_level.txt

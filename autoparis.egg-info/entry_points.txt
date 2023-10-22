@@ -1,0 +1,3 @@
+[console_scripts]
+ap_npy2dzi = autoparis.dzi_writer:main
+autoparis = autoparis.extract_predict:main
