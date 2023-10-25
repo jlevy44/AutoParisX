@@ -14,4 +14,3 @@ scipy==1.11.2
 setuptools==68.0.0
 pathpretrain==0.1.2
 ninja
-torchvision==0.10.1
