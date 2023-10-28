@@ -178,31 +178,24 @@ def process_image(I, max_objects=1e5, origin=(0,0), *args, **kwargs):
         # If CuPy is available, use the CuPy implementation of connected components labeling and morphological operations
         BW_cu = cupy.array(BW)
         labels = cupy.asnumpy(cu_label(BW_cu)[0])
-        BW = morph.remove_small_objects(labels, min_size=50, connectivity=8, in_place=False)
-        BW2 = morph.remove_small_objects(labels, min_size=500000, connectivity=8, in_place=False)
-        del labels
-        BW[BW2 > 0] = 0
-        del BW2
-        BW = fill_voids.fill(BW, in_place=False)
-        BW_bool = BW == 0
-        for i in range(3):
-            np.copyto(I[...,i], 255, where=BW_bool)
+    else:
+        # If CuPy is not available, use the scikit-image implementation of connected components labeling and morphological operations
+        labels, n_labels = measure.label(BW,return_num=True)
+    BW = morph.remove_small_objects(labels, min_size=50, connectivity=8, in_place=False)
+    BW2 = morph.remove_small_objects(labels, min_size=500000, connectivity=8, in_place=False)
+    del labels
+    BW[BW2 > 0] = 0
+    del BW2
+    BW = fill_voids.fill(BW)
+    BW_bool = BW == 0
+    for i in range(3):
+        np.copyto(I[...,i], 255, where=BW_bool)
+    if CUPY_IS_AVAILABLE:
         BW_cu = cupy.array(BW)
         labels, n_labels = cu_label(BW_cu)
         labels = cupy.asnumpy(labels)
     else:
-        # If CuPy is not available, use the scikit-image implementation of connected components labeling and morphological operations
-        labels, n_labels = measure.label(BW, connectivity=2, return_num=True)
-        BW = morph.remove_small_objects(labels, min_size=50, connectivity=8, in_place=False)
-        BW2 = morph.remove_small_objects(labels, min_size=500000, connectivity=8, in_place=False)
-        del labels
-        BW[BW2 > 0] = 0
-        del BW2
-        BW = fill_voids.fill(BW)
-        BW_bool = BW == 0
-        for i in range(3):
-            np.copyto(I[...,i], 255, where=BW_bool)
-        labels, n_labels = measure.label(BW, connectivity=2, return_num=True)
+        labels, n_labels = measure.label(BW, return_num=True)
 
     # Compute the region properties of the labeled regions
     stats = [return_color_im({k:s[k] for k in s}, I) for s in measure.regionprops(labels, coordinates='rc')]
