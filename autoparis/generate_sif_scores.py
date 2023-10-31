@@ -140,5 +140,8 @@ def generate_sif_scores(input_files="results/*",
 
     cell_scores_df.to_pickle(out_file)
 
-if __name__=="__main__":
+def main():
     fire.Fire(generate_sif_scores)
+
+if __name__=="__main__":
+    main()

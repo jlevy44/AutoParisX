@@ -19,6 +19,7 @@ setup(name='autoparis',
       scripts=["scripts/install_apx_dependencies.sh"],
       entry_points={
             'console_scripts':['autoparis=autoparis.extract_predict:main',
+                               "apx-gen-sif-scores=autoparis.generate_sif_scores:main",
                                'ap_npy2dzi=autoparis.dzi_writer:main']
       },
       long_description=long_description,
