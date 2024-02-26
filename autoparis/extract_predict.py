@@ -46,8 +46,8 @@ import gc
 import gpustat
 
 # Define auxiliary columns
-AUX_COLS=['area', 'convex_area', 'eccentricity', 'equivalent_diameter', 'extent',
-       'feret_diameter_max', 'filled_area', 'major_axis_length',
+AUX_COLS=['area', 'area_convex', 'eccentricity', 'equivalent_diameter_area', 'extent',
+       'feret_diameter_max', 'area_filled', 'major_axis_length',
        'minor_axis_length', 'perimeter', 'solidity']
 
 # Define EPS and CURRENT_PROCESS constants
@@ -181,8 +181,8 @@ def process_image(I, max_objects=1e5, origin=(0,0), *args, **kwargs):
     else:
         # If CuPy is not available, use the scikit-image implementation of connected components labeling and morphological operations
         labels, n_labels = measure.label(BW,return_num=True)
-    BW = morph.remove_small_objects(labels, min_size=50, connectivity=8, in_place=False)
-    BW2 = morph.remove_small_objects(labels, min_size=500000, connectivity=8, in_place=False)
+    BW = morph.remove_small_objects(labels, min_size=50, connectivity=8)#, in_place=False)
+    BW2 = morph.remove_small_objects(labels, min_size=500000, connectivity=8)#, in_place=False)
     del labels
     BW[BW2 > 0] = 0
     del BW2
@@ -198,14 +198,14 @@ def process_image(I, max_objects=1e5, origin=(0,0), *args, **kwargs):
         labels, n_labels = measure.label(BW, return_num=True)
 
     # Compute the region properties of the labeled regions
-    stats = [return_color_im({k:s[k] for k in s}, I) for s in measure.regionprops(labels, coordinates='rc')]
+    stats = [return_color_im({k:s[k] for k in s}, I) for s in measure.regionprops(labels)]#, coordinates='rc'
 
     # Create a pandas DataFrame from the region properties
     df_stat = pd.DataFrame([{k:v for k,v in stats[i].items() if isinstance(v,(np.int64,int,float,tuple)) and k not in ['slice','local_centroid']} for i in range(len(stats))])
     # Remove the 'bbox' column from the DataFrame and store it separately
     bbox = df_stat.pop("bbox")
     # Drop some unnecessary columns from the DataFrame
-    df_stat = df_stat.drop(columns=['bbox_area','centroid','euler_number','label','orientation','perimeter_crofton'])
+    df_stat = df_stat.drop(columns=['area_bbox','centroid','euler_number','label','orientation','perimeter_crofton'])
     # Shift the bounding boxes to the specified origin
     change_origin_vec = np.array(origin[:2] * 2)
     for i in range(len(stats)):
