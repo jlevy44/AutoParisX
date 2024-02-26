@@ -283,6 +283,7 @@ def extract_predict(wsi_file='wsi.npy',
         pd.to_pickle(dict(stats=stats,
                  df_stat=df_stat,
                  bbox=bbox),out_file)
+        return out_file
 
     # SPLIT CLUSTER DF INTO CLUSTER AND CELL SPECIFIC FRAME
     cluster_frame=df_stat.copy()
