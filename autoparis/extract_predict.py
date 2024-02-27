@@ -21,6 +21,7 @@ from scipy.special import softmax
 import dask
 from dask.diagnostics import ProgressBar
 import fill_voids
+from pathpretrain.utils import load_image
 
 # Import GPU libraries if available
 CUPY_IS_AVAILABLE=False
@@ -90,7 +91,7 @@ class WSI_Dataset_v2(Dataset):
         # Return the length of the dataset
         return self.length
 
-def load_image(path):
+def load_image_old(path):
     # Get the file extension from the path
     ext=os.path.splitext(path)[-1]
     # Load the image based on the file extension
