@@ -16,3 +16,4 @@ pathpretrain==0.1.2
 scikit-image==0.22.0
 ninja
 kornia==0.7.0
+pynvml==11.4.1
