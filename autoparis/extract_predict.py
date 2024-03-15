@@ -292,6 +292,7 @@ def extract_predict(wsi_file='wsi.npy',
     cluster_frame['image']=[s['color_image'] for s in stats]
     cluster_frame['image_shape']=cluster_frame['image'].map(lambda x: x.shape[:2])
     cluster_frame['bbox']=bbox.tolist()
+    cluster_frame=cluster_frame[(cluster_frame['image_shape'].map(np.prod)>0)].reset_index(drop=True)
     cluster_frame['cluster_label']=np.arange(len(cluster_frame))
     # cluster_frame=cluster_frame[((cluster_frame['image_shape'].map(lambda x:x[0])>20)+(cluster_frame['image_shape'].map(lambda x:x[1])>20))>0]
     cluster_frame_filtered_single=cluster_frame[cluster_frame['area'].between(256,1800)]
