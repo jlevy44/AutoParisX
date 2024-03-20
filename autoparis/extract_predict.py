@@ -151,6 +151,7 @@ def predict(batch, model, detectron_debug=False):
                 out = model(batch)['instances'].to("cpu")
             except:
                 out = Instances(batch.shape[:2])
+                out._fields["instances"]=[]
         else:
             out = model(batch)['instances'].to("cpu")
     # Return the predicted instances
