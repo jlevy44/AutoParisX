@@ -22,6 +22,7 @@ import dask
 from dask.diagnostics import ProgressBar
 import fill_voids
 from pathpretrain.utils import load_image
+from detectron2.structures.instances import Instances
 
 # Import GPU libraries if available
 CUPY_IS_AVAILABLE=False
@@ -142,10 +143,16 @@ def chunk_wsi(I, dr, dc):
 
 # Define a delayed function to predict instances in a batch using a model
 @dask.delayed
-def predict(batch, model):
+def predict(batch, model, detectron_debug=False):
     # Use the model to predict instances in the batch
     with torch.no_grad():
-        out = model(batch)['instances'].to("cpu")
+        if detectron_debug:
+            try:
+                out = model(batch)['instances'].to("cpu")
+            except:
+                out = Instances(batch.shape[:2])
+        else:
+            out = model(batch)['instances'].to("cpu")
     # Return the predicted instances
     return out
 
@@ -216,10 +223,10 @@ def process_image(I, max_objects=1e5, origin=(0,0), *args, **kwargs):
     # Return the region properties, DataFrame, and bounding boxes
     return stats, df_stat, bbox
 
-def make_predictions_detectron(cluster_frame_filtered_cluster,detectron_path,n_threads,n_workers_detectron):
+def make_predictions_detectron(cluster_frame_filtered_cluster,detectron_path,n_threads,n_workers_detectron,detectron_debug=False):
     predictor=load_predictor(detectron_path)
     dmodel = dask.delayed(predictor)
-    predictions = [predict(batch, dmodel) for batch in cluster_frame_filtered_cluster['image'].tolist()]
+    predictions = [predict(batch, dmodel, detectron_debug) for batch in cluster_frame_filtered_cluster['image'].tolist()]
     with Client(threads_per_worker=n_threads,
                     n_workers=n_workers_detectron) as client:
         predictions = dask.compute(*predictions)
@@ -248,7 +255,8 @@ def extract_predict(wsi_file='wsi.npy',
                    compression=1.,
                    interpolation="INTER_CUBIC",
                    export_data=False,
-                   zindex=-1):
+                   zindex=-1,
+                   detectron_debug=False):
     interpolation=getattr(cv2,interpolation,cv2.INTER_CUBIC)
     if gpu_id!=-1: os.environ['CUDA_VISIBLE_DEVICES']=f"{gpu_id}"
     # device = cuda.get_current_device()
@@ -305,7 +313,7 @@ def extract_predict(wsi_file='wsi.npy',
 
 
     cluster_frame_filtered_single['instances'] = np.nan
-    cluster_frame_filtered_cluster['instances'] = make_predictions_detectron(cluster_frame_filtered_cluster,detectron_path,n_threads,n_workers_detectron)
+    cluster_frame_filtered_cluster['instances'] = make_predictions_detectron(cluster_frame_filtered_cluster,detectron_path,n_threads,n_workers_detectron,detectron_debug=detectron_debug)
     cluster_frame_filtered_cluster['instances_filtered']=cluster_frame_filtered_cluster['instances'].map(clean_instance).map(clean_instance_v2)
     cluster_frame_filtered_cluster_downstream=cluster_frame_filtered_cluster[cluster_frame_filtered_cluster['instances_filtered'].map(len)>0]
     cluster_frame_filtered_cluster_downstream['dense']=cluster_frame_filtered_cluster_downstream['instances_filtered'].map(lambda x: sum(x.pred_classes.numpy()==1)>0)
