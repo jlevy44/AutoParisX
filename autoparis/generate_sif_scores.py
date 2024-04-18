@@ -16,7 +16,8 @@ OPTIMIZED_THRESHOLDS=[0.7822224025503274,
  4129,
  7121,
  13724,
- 0.1]
+ 0.1,
+ 0.4]
 
 OPTIMIZED_THRESHOLDS=dict(zip(["aty_thres",
                   "nc_thres",
@@ -28,7 +29,8 @@ OPTIMIZED_THRESHOLDS=dict(zip(["aty_thres",
                   "dense_small_max",
                   "dense_large_min",
                   "dense_large_max",
-                  "cl_cutoff_aty_nc"],
+                  "cl_cutoff_aty_nc",
+                  "cl_cutoff_aty_nc_or"],
                   OPTIMIZED_THRESHOLDS))
 
 def series_mean(ds,test_val=None,is_sum=False):
@@ -45,6 +47,7 @@ def generate_cluster_frame(d_,uro_thres=0.9,aty_thres=0.,nc_thres=0.2):
     cluster_cells['is_aty']=cluster_cells['aty']>=aty_thres
     cluster_cells['is_nc']=cluster_cells['nc_ratio']>=nc_thres
     cluster_cells['is_aty_nc']=np.logical_and(cluster_cells['is_aty'],cluster_cells['is_nc'])
+    cluster_cells['is_aty_nc_or']=np.logical_or(cluster_cells['is_aty'],cluster_cells['is_nc'])
 
     is_aty=(cluster_cells['is_aty'].groupby(cluster_cells["cluster_label"])).mean().reset_index()
     is_aty.columns=['cluster_label','aty']
@@ -54,10 +57,13 @@ def generate_cluster_frame(d_,uro_thres=0.9,aty_thres=0.,nc_thres=0.2):
 
     is_aty_nc=(cluster_cells['is_aty_nc'].groupby(cluster_cells["cluster_label"])).mean().reset_index()
     is_aty_nc.columns=['cluster_label','aty_nc']
+
+    is_aty_nc_or=(cluster_cells['is_aty_nc_or'].groupby(cluster_cells["cluster_label"])).mean().reset_index()
+    is_aty_nc_or.columns=['cluster_label','aty_nc_or']
     
     n_cells=cluster_cells['aty'].groupby(cluster_cells["cluster_label"]).size().reset_index()
     n_cells.columns=['cluster_label','n_cells']
-    cluster_frame=reduce(lambda x,y: pd.merge(x,y,on='cluster_label'),[cluster_cells.drop(columns='aty'),is_aty,is_nc,is_aty_nc,n_cells]).fillna(0.)
+    cluster_frame=reduce(lambda x,y: pd.merge(x,y,on='cluster_label'),[cluster_cells.drop(columns='aty'),is_aty,is_nc,is_aty_nc,is_aty_nc_or,n_cells]).fillna(0.)
     return cluster_frame
 
 def generate_data(dff_cluster,
@@ -74,6 +80,7 @@ def generate_data(dff_cluster,
                   dense_large_min,
                   dense_large_max,
                   cl_cutoff_aty_nc,
+                  cl_cutoff_aty_nc_or,
                   return_all_data=False,
                   **kwargs):
     dff_cluster_cells=dff_cluster_cells_orig.copy()
@@ -82,9 +89,10 @@ def generate_data(dff_cluster,
     dff_cluster_cells['is_aty']=dff_cluster_cells['aty']>=aty_thres
     dff_cluster_cells['is_nc']=dff_cluster_cells['nc_ratio']>=nc_thres
     dff_cluster_cells['is_aty_nc']=np.logical_and(dff_cluster_cells['is_aty'],dff_cluster_cells['is_nc'])
+    dff_cluster_cells['is_aty_nc_or']=np.logical_or(dff_cluster_cells['is_aty'],dff_cluster_cells['is_nc'])
     dff_cluster_cells['n_cells']=1
 
-    dff_cluster_cells_frame=(dff_cluster_cells.groupby(['basename','cluster_label'])[['is_aty','is_nc',"is_aty_nc",'n_cells']].agg(is_aty=("is_aty",np.mean),is_nc=("is_nc",np.mean),is_aty_nc=("is_aty_nc",np.mean),n_cells=("n_cells",np.sum))>=np.array([cl_cutoff_aty,cl_cutoff_nc,cl_cutoff_aty_nc,cl_cutoff_n_cell])).reset_index()
+    dff_cluster_cells_frame=(dff_cluster_cells.groupby(['basename','cluster_label'])[['is_aty','is_nc',"is_aty_nc","is_aty_nc_or",'n_cells']].agg(is_aty=("is_aty",np.mean),is_nc=("is_nc",np.mean),is_aty_nc=("is_aty_nc",np.mean),is_aty_nc_or=("is_aty_nc_or",np.mean),n_cells=("n_cells",np.sum))>=np.array([cl_cutoff_aty,cl_cutoff_nc,cl_cutoff_aty_nc,cl_cutoff_aty_nc_or,cl_cutoff_n_cell])).reset_index()
     dff_cluster_cells_frame=pd.merge(dff_cluster[['basename','cluster_label','dense_area']],dff_cluster_cells_frame,on=["basename",'cluster_label'],how="outer").fillna(0.)
 
     dff_isolated_cells=dff_isolated_cells_orig.copy()
@@ -93,15 +101,16 @@ def generate_data(dff_cluster,
     dff_isolated_cells['is_aty']=dff_isolated_cells['aty']>=aty_thres
     dff_isolated_cells['is_nc']=dff_isolated_cells['nc_ratio']>=nc_thres
     dff_isolated_cells['is_aty_nc']=np.logical_and(dff_isolated_cells['is_aty'],dff_isolated_cells['is_nc'])
+    dff_isolated_cells['is_aty_nc_or']=np.logical_or(dff_isolated_cells['is_aty'],dff_isolated_cells['is_nc'])
     dff_isolated_cells['n_cells']=1
 
     dff_all_cells=pd.concat([dff_cluster_cells,dff_isolated_cells])
     
     cell_scores=dict()
-    cell_scores['all_cells']=dff_all_cells.groupby(['basename'])[['is_aty','is_nc',"is_aty_nc",'n_cells']].sum().reset_index()
+    cell_scores['all_cells']=dff_all_cells.groupby(['basename'])[['is_aty','is_nc',"is_aty_nc","is_aty_nc_or",'n_cells']].sum().reset_index()
     cell_scores['ecc']=dff_all_cells.groupby(['basename'])[['eccentricity']].mean().reset_index()
-    cell_scores['iso_cells']=dff_isolated_cells.groupby(['basename'])[['is_aty','is_nc',"is_aty_nc"]].sum().reset_index()
-    cell_scores['cluster_cells']=dff_cluster_cells.groupby(['basename'])[['is_aty','is_nc',"is_aty_nc"]].sum().reset_index()
+    cell_scores['iso_cells']=dff_isolated_cells.groupby(['basename'])[['is_aty','is_nc',"is_aty_nc","is_aty_nc_or"]].sum().reset_index()
+    cell_scores['cluster_cells']=dff_cluster_cells.groupby(['basename'])[['is_aty','is_nc',"is_aty_nc","is_aty_nc_or"]].sum().reset_index()
     cell_scores['dense']=dff_cluster['dense_area'].between(dense_small_min,dense_small_max).groupby(dff_cluster['basename']).sum().reset_index()
     cell_scores['dense_large']=dff_cluster['dense_area'].between(dense_large_min,dense_large_max).groupby(dff_cluster['basename']).sum().reset_index()
     cell_scores['n_cluster']=dff_cluster_cells_frame['n_cells'].groupby(dff_cluster_cells_frame['basename']).size().reset_index()
