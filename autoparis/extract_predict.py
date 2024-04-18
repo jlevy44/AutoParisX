@@ -49,8 +49,8 @@ import gpustat
 
 # Define auxiliary columns
 AUX_COLS=['area', 'area_convex', 'eccentricity', 'equivalent_diameter_area', 'extent',
-       'feret_diameter_max', 'area_filled', 'major_axis_length',
-       'minor_axis_length', 'perimeter', 'solidity']
+       'feret_diameter_max', 'area_filled', 'axis_major_length',
+       'axis_minor_length', 'perimeter', 'solidity']
 
 # Define EPS and CURRENT_PROCESS constants
 EPS=0
@@ -299,6 +299,7 @@ def extract_predict(wsi_file='wsi.npy',
     # SPLIT CLUSTER DF INTO CLUSTER AND CELL SPECIFIC FRAME
     cluster_frame=df_stat.copy()
     aux_cols=cluster_frame.columns
+    aux_cols=AUX_COLS
     cluster_frame['image']=[s['color_image'] for s in stats]
     cluster_frame['image_shape']=cluster_frame['image'].map(lambda x: x.shape[:2])
     cluster_frame['bbox']=bbox.tolist()
