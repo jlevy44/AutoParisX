@@ -28,16 +28,16 @@ from PIL import Image
 import matplotlib; matplotlib.rcParams['figure.dpi']=300
 from torchvision.ops import nms
 import fire
-try:
-    from detectron2 import model_zoo
-    from detectron2.engine import DefaultPredictor
-    from detectron2.config import get_cfg
-    from detectron2.utils.visualizer import Visualizer
-    from detectron2.data import MetadataCatalog, DatasetCatalog
-    from detectron2.structures import BoxMode
-except:
-    import warnings
-    warnings.warn("Detectron2 could not be imported, can only export but not process data. Try installing with python -m pip install 'git+https://github.com/facebookresearch/detectron2.git@v0.6'")
+# try:
+from detectron2 import model_zoo
+from detectron2.engine import DefaultPredictor
+from detectron2.config import get_cfg
+from detectron2.utils.visualizer import Visualizer
+from detectron2.data import MetadataCatalog, DatasetCatalog
+from detectron2.structures import BoxMode
+# except:
+#     import warnings
+#     warnings.warn("Detectron2 could not be imported, can only export but not process data. Try installing with python -m pip install 'git+https://github.com/facebookresearch/detectron2.git@v0.6'")
 
 def load_predictor(dirname):
     d=pd.read_pickle(os.path.join(dirname,'config.pkl'))
