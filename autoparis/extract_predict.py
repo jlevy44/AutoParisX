@@ -288,9 +288,9 @@ def extract_predict(wsi_file='wsi.npy',
         res_.append(dask.delayed(process_image)(**c))
     with ProgressBar():
         res_=dask.compute(*res_,scheduler='processes' if len(res_)>1 else 'single-threaded',num_workers=min(n_chunks**2,n_workers_preprocess) if len(res_)>1 else None)
-    stats=list(reduce(lambda x,y:x+y,[r[0] for r in res_]))
-    df_stat=pd.concat([r[1] for r in res_]).reset_index(drop=True)
-    bbox=pd.concat([r[2] for r in res_]).reset_index(drop=True)
+    stats=list(reduce(lambda x,y:x+y,[r[0] for r in res_ if len(r[0])>0]))
+    df_stat=pd.concat([r[1] for r in res_ if len(r[0])>0]).reset_index(drop=True)
+    bbox=pd.concat([r[2] for r in res_ if len(r[0])>0]).reset_index(drop=True)
     # device.reset()
     if export_data:
         out_file=os.path.join(out_dir,f"{basename}{'_z'+str(zindex) if zindex!=-1 else ''}_data_export.pkl")
