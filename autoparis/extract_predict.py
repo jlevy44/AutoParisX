@@ -213,17 +213,20 @@ def process_image(I, max_objects=1e5, origin=(0,0), *args, **kwargs):
     # Create a pandas DataFrame from the region properties
     df_stat = pd.DataFrame([{k:v for k,v in stats[i].items() if isinstance(v,(np.int64,int,float,tuple)) and k not in ['slice','local_centroid']} for i in range(len(stats))])
     # Remove the 'bbox' column from the DataFrame and store it separately
-    bbox = df_stat.pop("bbox")
-    # Drop some unnecessary columns from the DataFrame
-    df_stat = df_stat.drop(columns=['area_bbox','centroid','euler_number','label','orientation','perimeter_crofton'])
-    # Shift the bounding boxes to the specified origin
-    change_origin_vec = np.array(origin[:2] * 2)
-    for i in range(len(stats)):
-        stats[i]['bbox'] = np.array(stats[i]['bbox']) + change_origin_vec
-    bbox = bbox.map(lambda x: np.array(x) + change_origin_vec)
+    if len(df_stat)>0:
+        bbox = df_stat.pop("bbox")
+        # Drop some unnecessary columns from the DataFrame
+        df_stat = df_stat.drop(columns=['area_bbox','centroid','euler_number','label','orientation','perimeter_crofton'])
+        # Shift the bounding boxes to the specified origin
+        change_origin_vec = np.array(origin[:2] * 2)
+        for i in range(len(stats)):
+            stats[i]['bbox'] = np.array(stats[i]['bbox']) + change_origin_vec
+        bbox = bbox.map(lambda x: np.array(x) + change_origin_vec)
 
-    # Return the region properties, DataFrame, and bounding boxes
-    return stats, df_stat, bbox
+        # Return the region properties, DataFrame, and bounding boxes
+        return stats, df_stat, bbox
+    else:
+        return [], pd.DataFrame(), pd.Series()
 
 def make_predictions_detectron(cluster_frame_filtered_cluster,detectron_path,n_threads,n_workers_detectron,detectron_debug=False):
     predictor=load_predictor(detectron_path)
